@@ -1,0 +1,21 @@
+[package]
+name = "cli-pdf-reader"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lints.rust]
+unused_parens = "allow"
+
+[lints.clippy]
+needless_return = "allow"
+
+[dependencies]
+cli-justify = { version = "0.1", path = "../cli-justify" }
+cli-pdf-to-text = { version = "0.1", path = "../cli-pdf-to-text" }
+
+getopts = "0.2"
+crossterm = "0.22"
+linefeed = "0.6"
+atty = "0.2"
