@@ -3,6 +3,7 @@ name = "cli-pdf-reader"
 version = "0.1.0"
 # publish = true
 edition = "2021"
+default-run = "cli-pdf-reader"
 license = "AGPL-3.0"
 repository = "https://github.com/kruserr/cli-pdf-reader"
 description = "A minimalistic CLI PDF reader"

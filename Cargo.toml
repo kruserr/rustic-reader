@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+
+members = [
+  "cli-pdf-reader",
+  "cli-justify",
+  "cli-pdf-to-text",
+
+  # Internal
+  # "examples",
+]
+
+[workspace.lints.rust]
+unused_parens = "allow"
+
+[workspace.lints.clippy]
+needless_return = "allow"
