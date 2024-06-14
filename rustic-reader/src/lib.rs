@@ -1,11 +1,11 @@
 #![doc(
-  html_logo_url = "https://raw.githubusercontent.com/kruserr/cli-pdf-reader/main/assets/logo/logo.svg",
-  html_favicon_url = "https://raw.githubusercontent.com/kruserr/cli-pdf-reader/main/assets/logo/favicon.ico"
+  html_logo_url = "https://raw.githubusercontent.com/kruserr/rustic-reader/main/assets/logo/logo.svg",
+  html_favicon_url = "https://raw.githubusercontent.com/kruserr/rustic-reader/main/assets/logo/favicon.ico"
 )]
 
 //! <p align="center">
-//!   <a href="https://github.com/kruserr/cli-pdf-reader" target="_blank">
-//!     <img width="300" src="https://raw.githubusercontent.com/kruserr/cli-pdf-reader/main/assets/logo/logo.svg">
+//!   <a href="https://github.com/kruserr/rustic-reader" target="_blank">
+//!     <img width="300" src="https://raw.githubusercontent.com/kruserr/rustic-reader/main/assets/logo/logo.svg">
 //!   </a>
 //! </p>
 //!
@@ -32,7 +32,7 @@
 //! ### Git and cargo
 //! Clone the repo, build from source and run
 //! ```sh
-//! git clone https://github.com/kruserr/cli-pdf-reader.git
+//! git clone https://github.com/kruserr/rustic-reader.git
 //! cd cli-pdf-reader
 //! cargo install --locked --path .
 //! cli-pdf-reader document.pdf
