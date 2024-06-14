@@ -15,7 +15,7 @@ categories = ["command-line-utilities", "parser-implementations", "text-processi
 workspace = true
 
 [dependencies]
-cli-justify = { path = "../cli-justify" }
+cli-justify = { version = "*", path = "../cli-justify" }
 
 getopts = "0.2"
 crossterm = "0.22"
