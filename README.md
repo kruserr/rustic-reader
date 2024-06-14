@@ -36,10 +36,12 @@ rustic-reader document.pdf
 ```
 
 ## Roadmap
+- [ ] Integrated command line
+- [ ] Auto saving progress
 - [ ] Text highlighting
-- [ ] epub format support
-- [ ] PWA web client
-- [ ] An optional server to sync books, progress and highlights
+- [ ] EPUB format support
+- [ ] Offline PWA web client
+- [ ] Server to sync books, progress and highlights
+- [ ] Support more ebook and document formats
 - [ ] CLI client image to ascii art converter
-- [ ] support more ebook and document formats
 - [ ] Natural sounding ai voice model for text to speech narration
