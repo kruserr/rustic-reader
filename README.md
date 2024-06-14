@@ -4,10 +4,12 @@
   </a>
 </p>
 
-# cli-pdf-reader
-A minimalistic CLI PDF reader
+# RusticReader
+A minimalistic ebook reader
 
 ## Features
+- CLI client
+- Each component in the CLI client is exposed as a unix style utility
 - Converts PDF to plain text
 - Justifies the plain text to specified column width
 - Centers the text based on the width of the terminal
@@ -20,15 +22,24 @@ A minimalistic CLI PDF reader
 ### Cargo
 Install and run with cargo
 ```sh
-cargo install --locked cli-pdf-reader
-cli-pdf-reader document.pdf
+cargo install --locked rustic-reader
+rustic-reader document.pdf
 ```
 
 ### Git and cargo
 Clone the repo, build from source and run
 ```sh
 git clone https://github.com/kruserr/rustic-reader.git
-cd cli-pdf-reader
+cd rustic-reader
 cargo install --locked --path .
-cli-pdf-reader document.pdf
+rustic-reader document.pdf
 ```
+
+## Roadmap
+- [ ] Text highlighting
+- [ ] epub format support
+- [ ] PWA web client
+- [ ] An optional server to sync books, progress and highlights
+- [ ] CLI client image to ascii art converter
+- [ ] support more ebook and document formats
+- [ ] Natural sounding ai voice model for text to speech narration
