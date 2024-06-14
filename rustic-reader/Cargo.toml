@@ -16,8 +16,8 @@ categories = ["command-line-utilities", "parser-implementations", "text-processi
 workspace = true
 
 [dependencies]
-cli-pdf-to-text = { version = "*", path = "../cli-pdf-to-text" }
-cli-justify = { version = "*", path = "../cli-justify" }
-cli-text-reader = { version = "*", path = "../cli-text-reader" }
+cli-pdf-to-text = { version = "0.1", path = "../cli-pdf-to-text" }
+cli-justify = { version = "0.1", path = "../cli-justify" }
+cli-text-reader = { version = "0.1", path = "../cli-text-reader" }
 
 getopts = "0.2"
