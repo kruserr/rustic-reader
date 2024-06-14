@@ -13,7 +13,7 @@ A minimalistic ebook reader
 - Converts PDF to plain text
 - Justifies the plain text to specified column width
 - Centers the text based on the width of the terminal
-- Uses a minimalistic less like interactive reader
+- Minimalistic less like interactive reader with vim like bindings
 - Written in pure rust
 - Statically linked single binary executable
 - Cross platform
@@ -30,7 +30,7 @@ rustic-reader document.pdf
 Clone the repo, build from source and run
 ```sh
 git clone https://github.com/kruserr/rustic-reader.git
-cd rustic-reader
+cd rustic-reader/rustic-reader
 cargo install --locked --path .
 rustic-reader document.pdf
 ```
