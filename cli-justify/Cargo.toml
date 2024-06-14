@@ -1,9 +1,9 @@
 [package]
 name = "cli-justify"
 version = "0.1.0"
-# publish = true
 edition = "2021"
 license = "AGPL-3.0"
+readme = "../README.md"
 repository = "https://github.com/kruserr/cli-pdf-reader"
 description = "A minimalistic CLI PDF reader"
 keywords = ["pdf", "cli", "parser", "terminal", "utility"]
@@ -11,11 +11,8 @@ categories = ["command-line-utilities", "parser-implementations", "text-processi
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lints.rust]
-unused_parens = "allow"
-
-[lints.clippy]
-needless_return = "allow"
+[lints]
+workspace = true
 
 [dependencies]
 getopts = "0.2"
