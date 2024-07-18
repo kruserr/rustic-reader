@@ -35,12 +35,12 @@ For further install instructions read the [Getting started page](docs/pages/gett
 Visit the [Documentation](docs/README.md)
 
 ## Roadmap
+- [ ] EPUB format support
 - [ ] Auto saving progress
 - [ ] Offline PWA web client
 - [ ] Server to sync progress
 - [ ] Integrated command line
 - [ ] Text highlighting
-- [ ] EPUB format support
 - [ ] Extend server to sync books and highlights
 - [ ] Support more ebook and document formats
 - [ ] CLI client image to ascii art converter
