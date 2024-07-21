@@ -13,7 +13,7 @@ Furthermore we are building a seamless experience for reading ebooks, both on a 
 
 ## Features
 - CLI client
-  - Converts PDF to plain text
+  - Converts PDF or EPUB to plain text
   - Justifies the plain text to specified column width
   - Horizontally centers the text
   - Minimalistic less like interactive reader with vim like bindings
