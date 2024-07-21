@@ -31,7 +31,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   };
 
   let file = std::env::args().nth(1).unwrap();
-  let lines = cli_justify::justify(&cli_pdf_to_text::pdf_to_text(&file)?, col);
+
+  let content = cli_epub_to_text::epub_to_text(&file)
+    .or(cli_pdf_to_text::pdf_to_text(&file))?;
+
+  let lines = cli_justify::justify(&content, col);
 
   cli_text_reader::run_cli_text_reader(lines, col)?;
 
