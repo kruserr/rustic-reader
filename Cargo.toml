@@ -2,9 +2,11 @@
 resolver = "2"
 
 members = [
-  "rustic-reader",
-  "cli-justify",
   "cli-pdf-to-text",
+  "cli-epub-to-text",
+  "cli-justify",
+  "cli-text-reader",
+  "rustic-reader",
 
   # Internal
   # "examples",

@@ -35,7 +35,9 @@ For further install instructions read the [Getting started page](docs/pages/gett
 Visit the [Documentation](docs/README.md)
 
 ## Roadmap
-- [ ] EPUB format support
+- [x] Plain text format support
+- [x] PDF format support
+- [x] EPUB format support
 - [ ] Auto saving progress
 - [ ] Offline PWA web client
 - [ ] Server to sync progress
