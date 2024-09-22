@@ -1,6 +1,6 @@
 [package]
 name = "rustic-reader"
-version = "0.1.2"
+version = "0.1.3"
 edition = "2021"
 default-run = "rustic-reader"
 license = "AGPL-3.0"
