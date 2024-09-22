@@ -137,8 +137,13 @@ dependencies = [
 name = "cli-pdf-to-text"
 version = "0.1.2"
 dependencies = [
+ "getopts",
+ "libc",
  "lopdf",
  "pdf-extract",
+ "rayon",
+ "redirect-stderr",
+ "winapi",
 ]
 
 [[package]]
@@ -849,6 +854,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "redirect-stderr"
+version = "0.1.1"
+dependencies = [
+ "libc",
+ "winapi",
+]
+
+[[package]]
 name = "redox_syscall"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -904,6 +917,7 @@ dependencies = [
  "cli-pdf-to-text",
  "cli-text-reader",
  "getopts",
+ "redirect-stderr",
 ]
 
 [[package]]

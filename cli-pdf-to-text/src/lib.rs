@@ -1,3 +1,5 @@
+use redirect_stderr;
+
 use lopdf;
 use pdf_extract;
 use std::{
@@ -8,6 +10,35 @@ use std::{
 pub fn pdf_to_text(
   pdf_path: &str,
 ) -> Result<String, Box<dyn std::error::Error>> {
+  #[cfg(target_os = "windows")]
+  redirect_stderr::redirect_stdout()?;
+
+  #[allow(unused_assignments)]
+  let mut original_fd = -1;
+
+  #[allow(unused_assignments)]
+  let mut duplicate_fd = -1;
+
+  #[cfg(not(target_os = "windows"))]
+  {
+    extern crate libc;
+
+    use std::fs::File;
+    use std::io::{self, Write};
+    use std::os::fd::AsRawFd;
+    use std::os::unix::io::FromRawFd;
+
+    let stdout = io::stdout();
+    original_fd = stdout.as_raw_fd();
+
+    duplicate_fd = unsafe { libc::dup(original_fd) };
+
+    let dev_null = File::open("/dev/null").unwrap();
+    unsafe {
+      libc::dup2(dev_null.as_raw_fd(), original_fd);
+    }
+  }
+
   let path = std::path::Path::new(pdf_path);
 
   let mut output_buf = Vec::new();
@@ -24,6 +55,26 @@ pub fn pdf_to_text(
 
     pdf_extract::output_doc(&doc, output.as_mut())?;
   }
+
+  #[cfg(target_os = "windows")]
+  redirect_stderr::restore_stdout()?;
+
+  #[cfg(not(target_os = "windows"))]
+  {
+    extern crate libc;
+
+    use std::fs::File;
+    use std::io::{self, Write};
+    use std::os::fd::AsRawFd;
+    use std::os::unix::io::FromRawFd;
+
+    unsafe {
+      libc::dup2(duplicate_fd, original_fd);
+    }
+  }
+
+  // println!("{:?}", output_buf);
+  // panic!();
 
   let res = std::str::from_utf8(&output_buf)
     .expect("Could not convert to String")

@@ -15,5 +15,17 @@ categories = ["command-line-utilities", "parser-implementations", "text-processi
 workspace = true
 
 [dependencies]
+redirect-stderr = { version = "0.1", path= "../redirect-stderr" }
+
+getopts = "0.2"
+
 pdf-extract = "0.7"
 lopdf = "0.32"
+
+[target.'cfg(unix)'.dependencies]
+libc = { version = "0.2" }
+[target.'cfg(target_os = "windows")'.dependencies]
+winapi = { version = "0.3" }
+
+[dev-dependencies]
+rayon = "1"

@@ -1,8 +1,7 @@
 [package]
-name = "rustic-reader"
-version = "0.1.2"
+name = "redirect-stderr"
+version = "0.1.1"
 edition = "2021"
-default-run = "rustic-reader"
 license = "AGPL-3.0"
 readme = "../README.md"
 repository = "https://github.com/kruserr/rustic-reader"
@@ -16,10 +15,9 @@ categories = ["command-line-utilities", "parser-implementations", "text-processi
 workspace = true
 
 [dependencies]
-cli-pdf-to-text = { version = "0.1", path = "../cli-pdf-to-text" }
-cli-epub-to-text = { version = "0.1", path = "../cli-epub-to-text" }
-cli-justify = { version = "0.1", path = "../cli-justify" }
-cli-text-reader = { version = "0.1", path = "../cli-text-reader" }
-redirect-stderr = { version = "0.1", path= "../redirect-stderr" }
 
-getopts = "0.2"
+# redirect-stderr dependencies
+[target.'cfg(unix)'.dependencies]
+libc = { version = "0.2" }
+[target.'cfg(target_os = "windows")'.dependencies]
+winapi = { version = "0.3" }
