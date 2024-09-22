@@ -6,6 +6,7 @@ members = [
   "cli-epub-to-text",
   "cli-justify",
   "cli-text-reader",
+  "redirect-stderr",
   "rustic-reader",
 
   # Internal
@@ -14,6 +15,9 @@ members = [
 
 [workspace.lints.rust]
 unused_parens = "allow"
+unused_imports = "allow"
 
 [workspace.lints.clippy]
 needless_return = "allow"
+implicit_saturating_sub = "allow"
+single_component_path_imports = "allow"

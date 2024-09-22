@@ -1,6 +1,7 @@
 use cli_justify;
 use cli_pdf_to_text;
 use cli_text_reader;
+use redirect_stderr;
 
 use std::env;
 
@@ -12,6 +13,8 @@ pub fn print_help_menu(args: Vec<String>, opts: getopts::Options) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+  redirect_stderr::redirect_stderr().expect("Failed to redirect stderr");
+
   let args: Vec<String> = env::args().collect();
   let mut opts = getopts::Options::new();
 

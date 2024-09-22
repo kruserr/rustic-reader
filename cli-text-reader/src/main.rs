@@ -35,10 +35,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let handle = std::thread::spawn(move || {
     let stdin = io::stdin();
-    for line in stdin.lock().lines() {
-      if let Ok(line) = line {
-        lines_vec_arc_clone.lock().unwrap().push(line);
-      }
+    for line in stdin.lock().lines().map_while(Result::ok) {
+      lines_vec_arc_clone.lock().unwrap().push(line);
     }
   });
 
