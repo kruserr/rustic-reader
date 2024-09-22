@@ -6,6 +6,7 @@ members = [
   "cli-epub-to-text",
   "cli-justify",
   "cli-text-reader",
+  "redirect-stderr",
   "rustic-reader",
 
   # Internal
