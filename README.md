@@ -38,6 +38,7 @@ Visit the [Documentation](docs/README.md)
 - [x] Plain text format support
 - [x] PDF format support
 - [x] EPUB format support
+- [ ] Convert scanned documents and images to plain text with OCR
 - [ ] Auto saving progress
 - [ ] Offline PWA web client
 - [ ] Server to sync progress
