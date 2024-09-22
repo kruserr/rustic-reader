@@ -29,11 +29,14 @@ pub fn justify(text: &str, line_width: usize) -> Vec<String> {
   lines
 }
 
-fn justify_line(line: &Vec<&str>, line_width: usize) -> String {
+fn justify_line(line: &[&str], line_width: usize) -> String {
   let word_len: usize = line.iter().map(|s| s.len()).sum();
   let spaces = line_width - word_len;
-  let each_space = spaces / (line.len() - 1);
-  let extra_space = spaces % (line.len() - 1);
+
+  let line_len_div = if (line.len() > 1) { (line.len() - 1) } else { 1 };
+
+  let each_space = spaces / line_len_div;
+  let extra_space = spaces % line_len_div;
 
   let mut justified = String::new();
   for (i, word) in line.iter().enumerate() {
