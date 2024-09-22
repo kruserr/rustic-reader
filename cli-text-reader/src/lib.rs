@@ -8,6 +8,7 @@ use crossterm::{
   terminal::{self, Clear, ClearType},
 };
 
+#[allow(dead_code)]
 fn handle_command(command: String) {
   if command == "q" {
     std::process::exit(0);
@@ -43,12 +44,12 @@ pub fn run_cli_text_reader(
       execute!(stdout, MoveTo(0, 0), Clear(ClearType::All))?;
     }
 
-    let mut show_line_number = false;
-    let mut center = true;
+    let show_line_number = false;
+    let center = true;
 
     let center_offset = if width > col { (width / 2) - col / 2 } else { 0 };
 
-    let mut center_offset_string =
+    let center_offset_string =
       if (center) { " ".repeat(center_offset) } else { "".to_string() };
 
     for (i, line_orig) in lines.iter().skip(offset).take(height).enumerate() {

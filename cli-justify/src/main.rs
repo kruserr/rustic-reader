@@ -27,7 +27,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   };
 
   let lines_vec: Vec<String> =
-    io::stdin().lock().lines().filter_map(Result::ok).collect();
+    io::stdin().lock().lines().map_while(Result::ok).collect();
   let lines = justify(&lines_vec.join("\n"), col).join("\n");
 
   println!("{lines}");
