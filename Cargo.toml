@@ -4,6 +4,7 @@ resolver = "2"
 members = [
   "cli-pdf-to-text",
   "cli-epub-to-text",
+  "ocrs-cli",
   "cli-justify",
   "cli-text-reader",
   "redirect-stderr",
