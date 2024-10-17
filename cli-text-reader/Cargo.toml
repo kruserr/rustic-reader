@@ -5,7 +5,7 @@ edition = "2021"
 license = "AGPL-3.0"
 readme = "../README.md"
 repository = "https://github.com/kruserr/rustic-reader"
-description = "A minimalistic ebook reader"
+description = "A less like CLI text reader"
 keywords = ["pdf", "cli", "parser", "terminal", "utility"]
 categories = ["command-line-utilities", "parser-implementations", "text-processing"]
 
