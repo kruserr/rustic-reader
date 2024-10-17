@@ -45,7 +45,7 @@ pub fn pdf_to_text(
   {
     let mut output_file = BufWriter::new(Cursor::new(&mut output_buf));
 
-    let doc = lopdf::Document::load(path)?;
+    let doc = pdf_extract::Document::load(path)?;
 
     pdf_extract::print_metadata(&doc);
 

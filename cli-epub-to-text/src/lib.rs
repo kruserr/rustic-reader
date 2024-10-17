@@ -9,9 +9,9 @@ pub fn epub_to_text(
   let mut string_builder = vec![];
   for spine_item in epub.spine.clone() {
     let xhtml = epub.get_resource(&spine_item).unwrap().0;
-    let text = html2text::from_read(&*xhtml, 110);
+    let text = html2text::from_read(&*xhtml, 110)?;
     string_builder.push(text);
   }
 
-  return Ok(string_builder.join("\n"));
+  Ok(string_builder.join("\n"))
 }

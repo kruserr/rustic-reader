@@ -15,5 +15,5 @@ categories = ["command-line-utilities", "parser-implementations", "text-processi
 workspace = true
 
 [dependencies]
-epub = "2.1.2"
-html2text = "0.12.6"
+epub = "2.1"
+html2text = "0.13"
