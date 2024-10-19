@@ -1,12 +1,9 @@
 fn split_at_char(s: &str, n: usize) -> (&str, Option<&str>) {
-  let mut char_index = 0;
-
-  for (i, _) in s.char_indices() {
+  for (char_index, (i, _)) in s.char_indices().enumerate() {
     if char_index == n {
       let (w1, w2) = s.split_at(i);
       return (w1, Some(w2));
     }
-    char_index += 1;
   }
 
   (s, None)
