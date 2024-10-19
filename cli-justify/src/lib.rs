@@ -1,9 +1,34 @@
+fn split_at_char(s: &str, n: usize) -> (&str, Option<&str>) {
+  let mut char_index = 0;
+
+  for (i, _) in s.char_indices() {
+    if char_index == n {
+      let (w1, w2) = s.split_at(i);
+      return (w1, Some(w2));
+    }
+    char_index += 1;
+  }
+
+  (s, None)
+}
+
 pub fn justify(text: &str, line_width: usize) -> Vec<String> {
   let paragraphs: Vec<&str> = text.split("\n\n").collect();
   let mut lines: Vec<String> = Vec::new();
 
   for paragraph in paragraphs {
-    let words: Vec<&str> = paragraph.split_whitespace().collect();
+    let raw_words: Vec<&str> = paragraph.split_whitespace().collect();
+    let mut words = vec![];
+
+    for mut word in raw_words {
+      while let (w1, Some(w2)) = split_at_char(word, line_width) {
+        words.push(w1);
+        word = w2;
+      }
+
+      words.push(word);
+    }
+
     let mut line: Vec<&str> = Vec::new();
     let mut len = 0;
 
@@ -51,4 +76,16 @@ fn justify_line(line: &[&str], line_width: usize) -> String {
   }
 
   justified
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_handles_long_words() {
+    let input_text = r#"some text and a very loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong word but no cause to panic"#;
+    let pretty_short_line_width = 10;
+    justify(input_text, pretty_short_line_width);
+  }
 }
