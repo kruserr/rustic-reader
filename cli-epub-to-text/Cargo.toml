@@ -1,6 +1,6 @@
 [package]
 name = "cli-epub-to-text"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 license = "AGPL-3.0"
 readme = "../README.md"

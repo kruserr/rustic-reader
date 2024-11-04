@@ -13,13 +13,12 @@ Furthermore we are building a seamless experience for reading ebooks, both on a 
 
 ## Features
 - CLI client
-  - Converts PDF or EPUB to plain text
+  - Converts regular and scanned PDF or EPUB to plain text
   - Justifies the plain text to specified column width
   - Horizontally centers the text
   - Minimalistic less like interactive reader with vim like bindings
   - Written in pure Rust
   - Cross platform
-  - Statically linked single binary executable
   - Each component in the CLI client is exposed as a UNIX style utility
 
 ## Quick start guide
@@ -27,6 +26,16 @@ Furthermore we are building a seamless experience for reading ebooks, both on a 
 ```sh
 cargo install --locked rustic-reader
 rustic-reader document.pdf
+```
+
+for scanned document support
+```sh
+sudo apt install ocrmypdf tesseract-ocr-eng
+```
+
+then use the `--ocr=true` flag
+```sh
+rustic-reader --ocr=true document.pdf
 ```
 
 For further install instructions read the [Getting started page](docs/pages/getting-started.md)
@@ -38,7 +47,7 @@ Visit the [Documentation](docs/README.md)
 - [x] Plain text format support
 - [x] PDF format support
 - [x] EPUB format support
-- [ ] Convert scanned documents and images to plain text with OCR
+- [x] Convert scanned documents and images to plain text with ocrmypdf
 - [ ] Auto saving progress
 - [ ] Offline PWA web client
 - [ ] Server to sync progress

@@ -1,6 +1,5 @@
-use std::io::{self, Write};
+use std::io::{self, IsTerminal, Write};
 
-use atty;
 use crossterm::{
   cursor::{Hide, MoveTo, Show},
   event::{self, Event, KeyCode, KeyEvent},
@@ -34,13 +33,13 @@ pub fn run_cli_text_reader(
   let mut width = terminal::size()?.0 as usize;
   let mut height = terminal::size()?.1 as usize;
 
-  if atty::is(atty::Stream::Stdout) {
+  if std::io::stdout().is_terminal() {
     execute!(stdout, terminal::EnterAlternateScreen, Hide)?;
     terminal::enable_raw_mode()?;
   }
 
   loop {
-    if (atty::is(atty::Stream::Stdout)) {
+    if std::io::stdout().is_terminal() {
       execute!(stdout, MoveTo(0, 0), Clear(ClearType::All))?;
     }
 
@@ -66,7 +65,7 @@ pub fn run_cli_text_reader(
 
     stdout.flush()?;
 
-    if atty::is(atty::Stream::Stdout) {
+    if std::io::stdout().is_terminal() {
       match event::read()? {
         Event::Key(key_event) => match key_event.code {
           KeyCode::Char('j') | KeyCode::Down => {
@@ -105,7 +104,7 @@ pub fn run_cli_text_reader(
     }
   }
 
-  if atty::is(atty::Stream::Stdout) {
+  if std::io::stdout().is_terminal() {
     execute!(stdout, Show, terminal::LeaveAlternateScreen)?;
     terminal::disable_raw_mode()?;
   }

@@ -1,6 +1,6 @@
 [package]
 name = "cli-text-reader"
-version = "0.1.6"
+version = "0.1.7"
 edition = "2021"
 license = "AGPL-3.0"
 readme = "../README.md"
@@ -19,4 +19,3 @@ cli-justify = { version = "0.1", path = "../cli-justify" }
 
 getopts = "0.2"
 crossterm = "0.28"
-atty = "0.2"
