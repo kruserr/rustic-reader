@@ -19,4 +19,3 @@ cli-justify = { version = "0.1", path = "../cli-justify" }
 
 getopts = "0.2"
 crossterm = "0.28"
-atty = "0.2"
