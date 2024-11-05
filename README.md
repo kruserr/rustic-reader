@@ -13,10 +13,11 @@ Furthermore we are building a seamless experience for reading ebooks, both on a 
 
 ## Features
 - CLI client
-  - Converts regular and scanned PDF or EPUB to plain text
+  - Converts regular or scanned PDF or EPUB to plain text
   - Justifies the plain text to specified column width
   - Horizontally centers the text
   - Minimalistic less like interactive reader with vim like bindings
+  - Saves progress
   - Written in pure Rust
   - Cross platform
   - Each component in the CLI client is exposed as a UNIX style utility
@@ -48,7 +49,7 @@ Visit the [Documentation](docs/README.md)
 - [x] PDF format support
 - [x] EPUB format support
 - [x] Convert scanned documents and images to plain text with ocrmypdf
-- [ ] Auto saving progress
+- [x] Auto saving progress
 - [ ] Offline PWA web client
 - [ ] Server to sync progress
 - [ ] Integrated command line
