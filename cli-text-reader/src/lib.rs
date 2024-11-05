@@ -5,10 +5,11 @@ use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use dirs::config_dir;
+use chrono::{Utc, DateTime};
 
 use crossterm::{
   cursor::{Hide, MoveTo, Show},
-  event::{self, Event, KeyCode, KeyEvent},
+  event::{self, Event as CEvent, KeyCode, KeyEvent},
   execute,
   terminal::{self, Clear, ClearType},
 };
@@ -33,6 +34,17 @@ struct Progress {
   percentage: f64,
 }
 
+#[derive(Serialize, Deserialize)]
+enum Event {
+  UpdateProgress {
+    timestamp: DateTime<Utc>,
+    document_hash: u64,
+    offset: usize,
+    total_lines: usize,
+    percentage: f64,
+  },
+}
+
 fn generate_hash<T: Hash>(t: &T) -> u64 {
   let mut s = DefaultHasher::new();
   t.hash(&mut s);
@@ -43,31 +55,49 @@ fn get_progress_file_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
   let mut config_path = config_dir().ok_or("Unable to find config directory")?;
   config_path.push("rustic-reader");
   std::fs::create_dir_all(&config_path)?;
-  config_path.push(".progress.json");
+  config_path.push(".progress.jsonl");
   Ok(config_path)
 }
 
 fn save_progress(document_hash: u64, offset: usize, total_lines: usize) -> Result<(), Box<dyn std::error::Error>> {
   let percentage = (offset as f64 / total_lines as f64) * 100.0;
-  let progress = Progress { document_hash, offset, total_lines, percentage };
-  let serialized = serde_json::to_string(&progress)?;
+  let event = Event::UpdateProgress {
+    timestamp: Utc::now(),
+    document_hash,
+    offset,
+    total_lines,
+    percentage,
+  };
+  let serialized = serde_json::to_string(&event)?;
   let progress_file_path = get_progress_file_path()?;
-  let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(progress_file_path)?;
+  let mut file = OpenOptions::new().create(true).append(true).open(progress_file_path)?;
   file.write_all(serialized.as_bytes())?;
+  file.write_all(b"\n")?;
   Ok(())
 }
 
 fn load_progress(document_hash: u64) -> Result<Progress, Box<dyn std::error::Error>> {
   let progress_file_path = get_progress_file_path()?;
-  let mut file = OpenOptions::new().read(true).open(progress_file_path)?;
-  let mut contents = String::new();
-  file.read_to_string(&mut contents)?;
-  let progress: Progress = serde_json::from_str(&contents)?;
-  if progress.document_hash == document_hash {
-    Ok(progress)
-  } else {
-    Err("Document hash does not match".into())
+  let file = OpenOptions::new().read(true).open(progress_file_path)?;
+  let reader = io::BufReader::new(file);
+  let mut latest_progress: Option<Progress> = None;
+
+  for line in reader.lines() {
+    let line = line?;
+    let event: Event = serde_json::from_str(&line)?;
+    if let Event::UpdateProgress { document_hash: hash, offset, total_lines, percentage, .. } = event {
+      if hash == document_hash {
+        latest_progress = Some(Progress {
+          document_hash: hash,
+          offset,
+          total_lines,
+          percentage,
+        });
+      }
+    }
   }
+
+  latest_progress.ok_or_else(|| "No progress found for the given document hash".into())
 }
 
 pub fn run_cli_text_reader(
@@ -120,7 +150,7 @@ pub fn run_cli_text_reader(
 
     if std::io::stdout().is_terminal() {
       match event::read()? {
-        Event::Key(key_event) => match key_event.code {
+        CEvent::Key(key_event) => match key_event.code {
           KeyCode::Char('j') | KeyCode::Down => {
             if offset + height < total_lines {
               offset += 1;
@@ -146,7 +176,7 @@ pub fn run_cli_text_reader(
           KeyCode::Char('q') => break,
           _ => {}
         },
-        Event::Resize(_, _) => {
+        CEvent::Resize(_, _) => {
           width = terminal::size()?.0 as usize;
           height = terminal::size()?.1 as usize;
         }
