@@ -1,4 +1,6 @@
 use std::io::{self, IsTerminal, Write};
+use std::fs::OpenOptions;
+use serde::{Serialize, Deserialize};
 
 use crossterm::{
   cursor::{Hide, MoveTo, Show},
@@ -17,18 +19,43 @@ fn handle_command(command: String) {
   }
 }
 
+use std::io::prelude::*;
+
+#[derive(Serialize, Deserialize)]
+struct Progress {
+  offset: usize,
+  total_lines: usize,
+  percentage: f64,
+}
+
+fn save_progress(offset: usize, total_lines: usize) -> Result<(), Box<dyn std::error::Error>> {
+  let percentage = (offset as f64 / total_lines as f64) * 100.0;
+  let progress = Progress { offset, total_lines, percentage };
+  let serialized = serde_json::to_string(&progress)?;
+  let mut file = OpenOptions::new().create(true).write(true).truncate(true).open("progress.json")?;
+  file.write_all(serialized.as_bytes())?;
+  Ok(())
+}
+
+fn load_progress() -> Result<Progress, Box<dyn std::error::Error>> {
+  let mut file = OpenOptions::new().read(true).open("progress.json")?;
+  let mut contents = String::new();
+  file.read_to_string(&mut contents)?;
+  let progress: Progress = serde_json::from_str(&contents)?;
+  Ok(progress)
+}
+
 pub fn run_cli_text_reader(
   lines: Vec<String>,
   col: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
-  // if (lines.len() < 2) {
-  // // TODO: Print tutorial here
-  // }
-
   let mut stdout = io::stdout();
 
   let total_lines = lines.len();
-  let mut offset = 0;
+  let mut offset = match load_progress() {
+    Ok(progress) => (progress.percentage / 100.0 * total_lines as f64).round() as usize,
+    Err(_) => 0,
+  };
 
   let mut width = terminal::size()?.0 as usize;
   let mut height = terminal::size()?.1 as usize;
@@ -49,14 +76,14 @@ pub fn run_cli_text_reader(
     let center_offset = if width > col { (width / 2) - col / 2 } else { 0 };
 
     let center_offset_string =
-      if (center) { " ".repeat(center_offset) } else { "".to_string() };
+      if center { " ".repeat(center_offset) } else { "".to_string() };
 
     for (i, line_orig) in lines.iter().skip(offset).take(height).enumerate() {
       let mut line = line_orig.clone();
 
       execute!(stdout, MoveTo(0, i as u16))?;
 
-      if (show_line_number) {
+      if show_line_number {
         line = format!("{i} {line}");
       }
 
@@ -102,6 +129,8 @@ pub fn run_cli_text_reader(
     } else {
       break;
     }
+
+    save_progress(offset, total_lines)?;
   }
 
   if std::io::stdout().is_terminal() {
