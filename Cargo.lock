@@ -115,7 +115,7 @@ dependencies = [
 
 [[package]]
 name = "cli-epub-to-text"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "epub",
  "html2text",
@@ -123,14 +123,14 @@ dependencies = [
 
 [[package]]
 name = "cli-justify"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "getopts",
 ]
 
 [[package]]
 name = "cli-pdf-to-text"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "getopts",
  "libc",
@@ -143,7 +143,7 @@ dependencies = [
 
 [[package]]
 name = "cli-text-reader"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "chrono",
  "cli-justify",
@@ -916,7 +916,7 @@ dependencies = [
 
 [[package]]
 name = "redirect-stderr"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "libc",
  "winapi",
@@ -973,7 +973,7 @@ checksum = "2b15c43186be67a4fd63bee50d0303afffcef381492ebe2c5d87f324e1b8815c"
 
 [[package]]
 name = "rustic-reader"
-version = "0.1.7"
+version = "0.1.8"
 dependencies = [
  "cli-epub-to-text",
  "cli-justify",
