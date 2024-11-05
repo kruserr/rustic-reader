@@ -1,11 +1,11 @@
-use std::io::{self, IsTerminal, Write};
-use std::fs::OpenOptions;
-use serde::{Serialize, Deserialize};
-use std::collections::hash_map::DefaultHasher;
-use std::hash::{Hash, Hasher};
-use std::path::PathBuf;
+use chrono::{DateTime, Utc};
 use dirs::config_dir;
-use chrono::{Utc, DateTime};
+use serde::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
+use std::fs::OpenOptions;
+use std::hash::{Hash, Hasher};
+use std::io::{self, IsTerminal, Write};
+use std::path::PathBuf;
 
 use crossterm::{
   cursor::{Hide, MoveTo, Show},
@@ -52,14 +52,19 @@ fn generate_hash<T: Hash>(t: &T) -> u64 {
 }
 
 fn get_progress_file_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
-  let mut config_path = config_dir().ok_or("Unable to find config directory")?;
+  let mut config_path =
+    config_dir().ok_or("Unable to find config directory")?;
   config_path.push("rustic-reader");
   std::fs::create_dir_all(&config_path)?;
   config_path.push(".progress.jsonl");
   Ok(config_path)
 }
 
-fn save_progress(document_hash: u64, offset: usize, total_lines: usize) -> Result<(), Box<dyn std::error::Error>> {
+fn save_progress(
+  document_hash: u64,
+  offset: usize,
+  total_lines: usize,
+) -> Result<(), Box<dyn std::error::Error>> {
   let percentage = (offset as f64 / total_lines as f64) * 100.0;
   let event = Event::UpdateProgress {
     timestamp: Utc::now(),
@@ -70,13 +75,16 @@ fn save_progress(document_hash: u64, offset: usize, total_lines: usize) -> Resul
   };
   let serialized = serde_json::to_string(&event)?;
   let progress_file_path = get_progress_file_path()?;
-  let mut file = OpenOptions::new().create(true).append(true).open(progress_file_path)?;
+  let mut file =
+    OpenOptions::new().create(true).append(true).open(progress_file_path)?;
   file.write_all(serialized.as_bytes())?;
   file.write_all(b"\n")?;
   Ok(())
 }
 
-fn load_progress(document_hash: u64) -> Result<Progress, Box<dyn std::error::Error>> {
+fn load_progress(
+  document_hash: u64,
+) -> Result<Progress, Box<dyn std::error::Error>> {
   let progress_file_path = get_progress_file_path()?;
   let file = OpenOptions::new().read(true).open(progress_file_path)?;
   let reader = io::BufReader::new(file);
@@ -85,7 +93,15 @@ fn load_progress(document_hash: u64) -> Result<Progress, Box<dyn std::error::Err
   for line in reader.lines() {
     let line = line?;
     let event: Event = serde_json::from_str(&line)?;
-    if let Event::UpdateProgress { document_hash: hash, offset, total_lines, percentage, .. } = event {
+    #[allow(irrefutable_let_patterns)]
+    if let Event::UpdateProgress {
+      document_hash: hash,
+      offset,
+      total_lines,
+      percentage,
+      ..
+    } = event
+    {
       if hash == document_hash {
         latest_progress = Some(Progress {
           document_hash: hash,
@@ -97,7 +113,8 @@ fn load_progress(document_hash: u64) -> Result<Progress, Box<dyn std::error::Err
     }
   }
 
-  latest_progress.ok_or_else(|| "No progress found for the given document hash".into())
+  latest_progress
+    .ok_or_else(|| "No progress found for the given document hash".into())
 }
 
 pub fn run_cli_text_reader(
@@ -109,7 +126,9 @@ pub fn run_cli_text_reader(
   let document_hash = generate_hash(&lines);
   let total_lines = lines.len();
   let mut offset = match load_progress(document_hash) {
-    Ok(progress) => (progress.percentage / 100.0 * total_lines as f64).round() as usize,
+    Ok(progress) => {
+      (progress.percentage / 100.0 * total_lines as f64).round() as usize
+    }
     Err(_) => 0,
   };
 
