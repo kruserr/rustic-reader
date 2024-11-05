@@ -1,6 +1,10 @@
 use std::io::{self, IsTerminal, Write};
 use std::fs::OpenOptions;
 use serde::{Serialize, Deserialize};
+use std::collections::hash_map::DefaultHasher;
+use std::hash::{Hash, Hasher};
+use std::path::PathBuf;
+use dirs::config_dir;
 
 use crossterm::{
   cursor::{Hide, MoveTo, Show},
@@ -23,26 +27,47 @@ use std::io::prelude::*;
 
 #[derive(Serialize, Deserialize)]
 struct Progress {
+  document_hash: u64,
   offset: usize,
   total_lines: usize,
   percentage: f64,
 }
 
-fn save_progress(offset: usize, total_lines: usize) -> Result<(), Box<dyn std::error::Error>> {
+fn generate_hash<T: Hash>(t: &T) -> u64 {
+  let mut s = DefaultHasher::new();
+  t.hash(&mut s);
+  s.finish()
+}
+
+fn get_progress_file_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
+  let mut config_path = config_dir().ok_or("Unable to find config directory")?;
+  config_path.push("rustic-reader");
+  std::fs::create_dir_all(&config_path)?;
+  config_path.push(".progress.json");
+  Ok(config_path)
+}
+
+fn save_progress(document_hash: u64, offset: usize, total_lines: usize) -> Result<(), Box<dyn std::error::Error>> {
   let percentage = (offset as f64 / total_lines as f64) * 100.0;
-  let progress = Progress { offset, total_lines, percentage };
+  let progress = Progress { document_hash, offset, total_lines, percentage };
   let serialized = serde_json::to_string(&progress)?;
-  let mut file = OpenOptions::new().create(true).write(true).truncate(true).open("progress.json")?;
+  let progress_file_path = get_progress_file_path()?;
+  let mut file = OpenOptions::new().create(true).write(true).truncate(true).open(progress_file_path)?;
   file.write_all(serialized.as_bytes())?;
   Ok(())
 }
 
-fn load_progress() -> Result<Progress, Box<dyn std::error::Error>> {
-  let mut file = OpenOptions::new().read(true).open("progress.json")?;
+fn load_progress(document_hash: u64) -> Result<Progress, Box<dyn std::error::Error>> {
+  let progress_file_path = get_progress_file_path()?;
+  let mut file = OpenOptions::new().read(true).open(progress_file_path)?;
   let mut contents = String::new();
   file.read_to_string(&mut contents)?;
   let progress: Progress = serde_json::from_str(&contents)?;
-  Ok(progress)
+  if progress.document_hash == document_hash {
+    Ok(progress)
+  } else {
+    Err("Document hash does not match".into())
+  }
 }
 
 pub fn run_cli_text_reader(
@@ -51,8 +76,9 @@ pub fn run_cli_text_reader(
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut stdout = io::stdout();
 
+  let document_hash = generate_hash(&lines);
   let total_lines = lines.len();
-  let mut offset = match load_progress() {
+  let mut offset = match load_progress(document_hash) {
     Ok(progress) => (progress.percentage / 100.0 * total_lines as f64).round() as usize,
     Err(_) => 0,
   };
@@ -130,7 +156,7 @@ pub fn run_cli_text_reader(
       break;
     }
 
-    save_progress(offset, total_lines)?;
+    save_progress(document_hash, offset, total_lines)?;
   }
 
   if std::io::stdout().is_terminal() {
