@@ -1,32 +1,34 @@
 <p align="center">
-  <a href="https://github.com/kruserr/rustic-reader" target="_blank">
-    <img width="300" src="https://raw.githubusercontent.com/kruserr/rustic-reader/main/assets/logo/logo.svg">
+  <a href="https://github.com/kruserr/hygg" target="_blank">
+    <img width="300" src="https://raw.githubusercontent.com/kruserr/hygg/main/assets/logo/logo.svg">
   </a>
 </p>
 
-# RusticReader
-A minimalistic ebook reader
+# hygg
+Simplifying the way you read
 
 ## Overview
-The goal of this project is to build an ebook reader that has a minimal set of features, that make ebook reading enjoyable on a desktop computer.
-Furthermore we are building a seamless experience for reading ebooks, both on a desktop computer and a tablet or ereader with a browser.
+The goal of this project is to build an ebook and document reader that has a minimal set of features, that make reading enjoyable on a desktop computer.
+
+A large emphasis is on making a minimalistic and distraction free environment for you to easily focus on what is important, the content.
+
+Furthermore we are working on building a seamless experience for reading ebooks but also more generally documents, both on a desktop computer and a tablet or e-reader with a browser.
 
 ## Features
 - CLI client
   - Converts regular or scanned PDF or EPUB to plain text
   - Justifies the plain text to specified column width
   - Horizontally centers the text
-  - Minimalistic less like interactive reader with vim like bindings
+  - Minimalistic less like interactive reader with vim like bindings (still work in progress)
   - Saves progress
-  - Written in pure Rust
   - Cross platform
-  - Each component in the CLI client is exposed as a UNIX style utility
+  - Each component in the CLI client is exposed as a UNIX style utility for easy code reuse in your own open source project
 
 ## Quick start guide
 ### Install the CLI client
 ```sh
-cargo install --locked rustic-reader
-rustic-reader document.pdf
+cargo install --locked hygg
+hygg document.pdf
 ```
 
 for scanned document support
@@ -36,7 +38,7 @@ sudo apt install ocrmypdf tesseract-ocr-eng
 
 then use the `--ocr=true` flag
 ```sh
-rustic-reader --ocr=true document.pdf
+hygg --ocr=true document.pdf
 ```
 
 For further install instructions read the [Getting started page](docs/pages/getting-started.md)
@@ -50,11 +52,11 @@ Visit the [Documentation](docs/README.md)
 - [x] EPUB format support
 - [x] Convert scanned documents and images to plain text with ocrmypdf
 - [x] Auto saving progress
-- [ ] Offline PWA web client
-- [ ] Server to sync progress
-- [ ] Integrated command line
-- [ ] Text highlighting
-- [ ] Extend server to sync books and highlights
-- [ ] Support more ebook and document formats
-- [ ] CLI client image to ascii art converter
+- [ ] Server to sync progress and books
+- [ ] Integrated command line with vim like commands
+- [ ] Text highlighting with server sync
+- [ ] Image to ascii art converter
 - [ ] Natural sounding ai voice model for text to speech narration
+- [ ] Run all inference directly in rust
+- [ ] Offline PWA web client
+- [ ] Support more ebook and document formats

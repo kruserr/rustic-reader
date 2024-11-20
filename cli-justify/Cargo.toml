@@ -1,10 +1,10 @@
 [package]
 name = "cli-justify"
-version = "0.1.8"
+version = "0.1.9"
 edition = "2021"
 license = "AGPL-3.0"
 readme = "../README.md"
-repository = "https://github.com/kruserr/rustic-reader"
+repository = "https://github.com/kruserr/hygg"
 description = "A CLI text justify tool"
 keywords = ["pdf", "cli", "parser", "terminal", "utility"]
 categories = ["command-line-utilities", "parser-implementations", "text-processing"]

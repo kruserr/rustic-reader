@@ -54,7 +54,7 @@ fn generate_hash<T: Hash>(t: &T) -> u64 {
 fn get_progress_file_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
   let mut config_path =
     config_dir().ok_or("Unable to find config directory")?;
-  config_path.push("rustic-reader");
+  config_path.push("hygg");
   std::fs::create_dir_all(&config_path)?;
   config_path.push(".progress.jsonl");
   Ok(config_path)
