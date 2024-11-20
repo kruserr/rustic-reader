@@ -11,11 +11,11 @@ For further install instructions, read the Rust docs https://www.rust-lang.org/l
 
 ### Install and run with cargo
 ```sh
-cargo install --locked rustic-reader
-rustic-reader document.pdf
+cargo install --locked hygg
+hygg document.pdf
 ```
 
-If the `rustic-reader` binary executable is not found, checkout how to add `~/.cargo/bin` to your path.
+If the `hygg` binary executable is not found, checkout how to add `~/.cargo/bin` to your path.
 
 e.g. for the fish shell you add the following to your config:
 
@@ -27,15 +27,15 @@ fish_add_path ~/.cargo/bin
 ### Git and cargo
 Clone the repo, build from source and run
 ```sh
-git clone https://github.com/kruserr/rustic-reader.git
-cd rustic-reader
+git clone https://github.com/kruserr/hygg.git
+cd hygg
 cargo run -- document.pdf
 ```
 
 Clone the repo, build from source, install and run
 ```sh
-git clone https://github.com/kruserr/rustic-reader.git
-cd rustic-reader/rustic-reader
+git clone https://github.com/kruserr/hygg.git
+cd hygg/hygg
 cargo install --locked --path .
-rustic-reader document.pdf
+hygg document.pdf
 ```
