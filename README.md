@@ -28,7 +28,7 @@ Furthermore we are working on building a seamless experience for reading ebooks 
 ### Install the CLI client
 ```sh
 cargo install --locked hygg
-hygg document.pdf
+hygg doc.pdf
 ```
 
 for scanned document support
@@ -38,7 +38,7 @@ sudo apt install ocrmypdf tesseract-ocr-eng
 
 then use the `--ocr=true` flag
 ```sh
-hygg --ocr=true document.pdf
+hygg --ocr=true doc.pdf
 ```
 
 For further install instructions read the [Getting started page](docs/pages/getting-started.md)

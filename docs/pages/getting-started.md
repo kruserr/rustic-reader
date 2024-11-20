@@ -12,7 +12,7 @@ For further install instructions, read the Rust docs https://www.rust-lang.org/l
 ### Install and run with cargo
 ```sh
 cargo install --locked hygg
-hygg document.pdf
+hygg doc.pdf
 ```
 
 If the `hygg` binary executable is not found, checkout how to add `~/.cargo/bin` to your path.
@@ -29,13 +29,13 @@ Clone the repo, build from source and run
 ```sh
 git clone https://github.com/kruserr/hygg.git
 cd hygg
-cargo run -- document.pdf
+cargo run -- test-data/pdf/pdfreference1.7old-1-50.pdf
 ```
 
 Clone the repo, build from source, install and run
 ```sh
 git clone https://github.com/kruserr/hygg.git
-cd hygg/hygg
-cargo install --locked --path .
-hygg document.pdf
+cd hygg
+cargo install --locked --path hygg
+cargo run -- test-data/pdf/pdfreference1.7old-1-50.pdf
 ```
