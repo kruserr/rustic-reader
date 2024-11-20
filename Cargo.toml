@@ -7,7 +7,7 @@ members = [
   "cli-justify",
   "cli-text-reader",
   "redirect-stderr",
-  "rustic-reader",
+  "hygg",
 
   # Internal
   # "examples",

@@ -57,5 +57,6 @@ Visit the [Documentation](docs/README.md)
 - [ ] Text highlighting with server sync
 - [ ] Image to ascii art converter
 - [ ] Natural sounding ai voice model for text to speech narration
+- [ ] Run all inference directly in rust
 - [ ] Offline PWA web client
 - [ ] Support more ebook and document formats
