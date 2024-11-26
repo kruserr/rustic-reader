@@ -52,9 +52,10 @@ Visit the [Documentation](https://github.com/kruserr/hygg/blob/main/docs/pages/g
 - [x] EPUB format support
 - [x] Convert scanned documents and images to plain text with ocrmypdf
 - [x] Auto saving progress
+- [x] Integrated command line with vim like commands
 - [ ] Server to sync progress and books
-- [ ] Integrated command line with vim like commands
 - [ ] Text highlighting with server sync
+- [ ] Start screen to show overview of books and progress
 - [ ] Image to ascii art converter
 - [ ] Natural sounding ai voice model for text to speech narration
 - [ ] Run all inference directly in rust
