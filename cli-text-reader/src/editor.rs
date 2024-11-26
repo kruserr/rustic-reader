@@ -107,7 +107,7 @@ impl Editor {
         Ok(())
     }
 
-    fn show_tutorial(&self, stdout: &mut io::Stdout) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn show_tutorial(&self, stdout: &mut io::Stdout) -> Result<(), Box<dyn std::error::Error>> {
         let tutorial_lines = get_tutorial_text();
         
         if std::io::stdout().is_terminal() {
@@ -268,6 +268,12 @@ impl Editor {
                 self.editor_state.command_buffer.clear();
                 Ok(false)
             }
+            "help" | "tutorial" => {
+                self.show_tutorial(stdout)?;
+                self.editor_state.mode = EditorMode::Normal;
+                self.editor_state.command_buffer.clear();
+                Ok(false)
+            }
             cmd => Ok(handle_command(cmd, &mut self.show_highlighter))
         }
     }
@@ -280,7 +286,7 @@ pub fn handle_command(command: &str, show_highlighter: &mut bool) -> bool {
             *show_highlighter = !*show_highlighter;
             false
         }
-        "p" => false, // Return false to stay in the editor
+        "p" | "help" | "tutorial" => false,
         _ => false,
     }
 }

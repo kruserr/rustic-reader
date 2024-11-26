@@ -10,6 +10,8 @@ pub fn get_tutorial_text() -> Vec<String> {
         "  PageUp    : Move up one page".to_string(),
         "  :z        : Toggle line highlighter".to_string(),
         "  :q        : Quit".to_string(),
+        "  :help     : Open this tutorial".to_string(),
+        "  :tutorial : Open this tutorial".to_string(),
         "".to_string(),
         "Press any key to continue...".to_string(),
     ]
