@@ -16,16 +16,6 @@ use crossterm::{
     style::{SetAttribute, Attribute, SetForegroundColor, SetBackgroundColor, Color, ResetColor},
 };
 
-#[allow(dead_code)]
-fn handle_command(command: String) {
-  if command == "q" {
-    std::process::exit(0);
-  }
-  if command == ":q" {
-    std::process::exit(0);
-  }
-}
-
 use std::io::prelude::*;
 
 #[derive(Serialize, Deserialize)]
@@ -128,8 +118,8 @@ fn get_tutorial_text() -> Vec<String> {
     "  k or ↑    : Move up one line".to_string(),
     "  PageDown  : Move down one page".to_string(),
     "  PageUp    : Move up one page".to_string(),
-    "  z         : Toggle line highlighter".to_string(),
-    "  q         : Quit".to_string(),
+    "  :z        : Toggle line highlighter".to_string(),
+    "  :q        : Quit".to_string(),
     "".to_string(),
     "Press any key to continue...".to_string(),
   ]
@@ -173,6 +163,28 @@ fn load_config() -> AppConfig {
     }
     
     config
+}
+
+#[derive(PartialEq)]
+enum EditorMode {
+    Normal,
+    Command,
+}
+
+struct EditorState {
+    mode: EditorMode,
+    command_buffer: String,
+}
+
+fn handle_command(command: &str, show_highlighter: &mut bool) -> bool {
+    match command.trim() {
+        "q" => true,  // return true to quit
+        "z" => {
+            *show_highlighter = !*show_highlighter;
+            false
+        }
+        _ => false,
+    }
 }
 
 pub fn run_cli_text_reader(
@@ -246,6 +258,11 @@ pub fn run_cli_text_reader(
 
   let mut show_highlighter = config.enable_line_highlighter.unwrap_or(true);
 
+  let mut editor_state = EditorState {
+    mode: EditorMode::Normal,
+    command_buffer: String::new(),
+  };
+
   loop {
     if std::io::stdout().is_terminal() {
       execute!(stdout, MoveTo(0, 0), Clear(ClearType::All))?;
@@ -282,38 +299,66 @@ pub fn run_cli_text_reader(
       }
     }
 
+    // Add command line display at the bottom
+    if editor_state.mode == EditorMode::Command {
+        execute!(stdout, MoveTo(0, (height - 1) as u16))?;
+        print!(":{}", editor_state.command_buffer);
+    }
+
     stdout.flush()?;
 
     if std::io::stdout().is_terminal() {
       match event::read()? {
-        CEvent::Key(key_event) => match key_event.code {
-          KeyCode::Char('j') | KeyCode::Down => {
-            if offset + height < total_lines {
-              offset += 1;
+        CEvent::Key(key_event) => match editor_state.mode {
+            EditorMode::Normal => match key_event.code {
+                KeyCode::Char(':') => {
+                    editor_state.mode = EditorMode::Command;
+                    editor_state.command_buffer.clear();
+                },
+                KeyCode::Char('j') | KeyCode::Down => {
+                    if offset + height < total_lines {
+                        offset += 1;
+                    }
+                }
+                KeyCode::Char('k') | KeyCode::Up => {
+                    if offset > 0 {
+                        offset -= 1;
+                    }
+                }
+                KeyCode::PageDown => {
+                    if offset + height < total_lines {
+                        offset += height - 3;
+                    }
+                }
+                KeyCode::PageUp => {
+                    if offset as i32 - height as i32 > 0 {
+                        offset -= height - 3;
+                    } else {
+                        offset = 0;
+                    }
+                }
+                _ => {}
+            },
+            EditorMode::Command => match key_event.code {
+                KeyCode::Esc => {
+                    editor_state.mode = EditorMode::Normal;
+                    editor_state.command_buffer.clear();
+                },
+                KeyCode::Enter => {
+                    if handle_command(&editor_state.command_buffer.trim_start_matches(':'), &mut show_highlighter) {
+                        break;
+                    }
+                    editor_state.mode = EditorMode::Normal;
+                    editor_state.command_buffer.clear();
+                },
+                KeyCode::Backspace => {
+                    editor_state.command_buffer.pop();
+                },
+                KeyCode::Char(c) => {
+                    editor_state.command_buffer.push(c);
+                },
+                _ => {}
             }
-          }
-          KeyCode::Char('k') | KeyCode::Up => {
-            if offset > 0 {
-              offset -= 1;
-            }
-          }
-          KeyCode::PageDown => {
-            if offset + height < total_lines {
-              offset += height - 3;
-            }
-          }
-          KeyCode::PageUp => {
-            if offset as i32 - height as i32 > 0 {
-              offset -= height - 3;
-            } else {
-              offset = 0;
-            }
-          }
-          KeyCode::Char('z') => {
-            show_highlighter = !show_highlighter;
-          },
-          KeyCode::Char('q') => break,
-          _ => {}
         },
         CEvent::Resize(_, _) => {
           width = terminal::size()?.0 as usize;
