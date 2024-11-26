@@ -41,6 +41,8 @@ pub struct Editor {
     editor_state: EditorState,
     document_hash: u64,
     total_lines: usize,
+    progress_display_until: Option<std::time::Instant>,
+    show_progress: bool,
 }
 
 impl Editor {
@@ -61,6 +63,8 @@ impl Editor {
             editor_state: EditorState::new(),
             document_hash,
             total_lines,
+            progress_display_until: None,
+            show_progress: false,
         }
     }
 
@@ -175,6 +179,16 @@ impl Editor {
                 print!(":{}", self.editor_state.command_buffer);
             }
 
+            // Show progress if enabled
+            if self.show_progress {
+                let progress = (self.offset as f64 / self.total_lines as f64 * 100.0).round();
+                let message = format!("{}%", progress);
+                let x = self.width as u16 - message.len() as u16 - 2;
+                let y = self.height as u16 - 2;
+                execute!(stdout, MoveTo(x, y))?;
+                print!("{}", message);
+            }
+
             stdout.flush()?;
 
             if std::io::stdout().is_terminal() {
@@ -215,7 +229,7 @@ impl Editor {
                                 self.editor_state.command_buffer.clear();
                             },
                             KeyCode::Enter => {
-                                if handle_command(&self.editor_state.command_buffer, &mut self.show_highlighter) {
+                                if self.execute_command(stdout)? {
                                     return Ok(());
                                 }
                                 self.editor_state.mode = EditorMode::Normal;
@@ -245,6 +259,18 @@ impl Editor {
 
         Ok(())
     }
+
+    fn execute_command(&mut self, stdout: &mut io::Stdout) -> Result<bool, Box<dyn std::error::Error>> {
+        match self.editor_state.command_buffer.trim() {
+            "p" => {
+                self.show_progress = !self.show_progress;
+                self.editor_state.mode = EditorMode::Normal;
+                self.editor_state.command_buffer.clear();
+                Ok(false)
+            }
+            cmd => Ok(handle_command(cmd, &mut self.show_highlighter))
+        }
+    }
 }
 
 pub fn handle_command(command: &str, show_highlighter: &mut bool) -> bool {
@@ -254,6 +280,7 @@ pub fn handle_command(command: &str, show_highlighter: &mut bool) -> bool {
             *show_highlighter = !*show_highlighter;
             false
         }
+        "p" => false, // Return false to stay in the editor
         _ => false,
     }
 }
