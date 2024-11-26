@@ -117,13 +117,70 @@ fn load_progress(
     .ok_or_else(|| "No progress found for the given document hash".into())
 }
 
+fn get_tutorial_text() -> Vec<String> {
+  vec![
+    "Welcome to the Text Reader!".to_string(),
+    "".to_string(),
+    "Basic Controls:".to_string(),
+    "  j or ↓    : Move down one line".to_string(),
+    "  k or ↑    : Move up one line".to_string(),
+    "  PageDown  : Move down one page".to_string(),
+    "  PageUp    : Move up one page".to_string(),
+    "  q         : Quit".to_string(),
+    "".to_string(),
+    "Press any key to continue...".to_string(),
+  ]
+}
+
 pub fn run_cli_text_reader(
   lines: Vec<String>,
   col: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut stdout = io::stdout();
-
+  
+  // Show tutorial for empty files or first-time views
   let document_hash = generate_hash(&lines);
+  let show_tutorial = lines.is_empty() || load_progress(document_hash).is_err();
+  
+  if show_tutorial {
+    let tutorial_lines = get_tutorial_text();
+    let mut stdout = io::stdout();
+    
+    if std::io::stdout().is_terminal() {
+      execute!(stdout, terminal::EnterAlternateScreen, Hide)?;
+      terminal::enable_raw_mode()?;
+      
+      let width = terminal::size()?.0 as usize;
+      let height = terminal::size()?.1 as usize;
+      let center_offset = if width > col { (width / 2) - col / 2 } else { 0 };
+      
+      execute!(stdout, MoveTo(0, 0), Clear(ClearType::All))?;
+      
+      for (i, line) in tutorial_lines.iter().enumerate() {
+        execute!(stdout, MoveTo(center_offset as u16, (height/2 - tutorial_lines.len()/2 + i) as u16))?;
+        println!("{}", line);
+      }
+      
+      stdout.flush()?;
+      
+      // Wait for any key press
+      while let Ok(event) = event::read() {
+        if let CEvent::Key(_) = event {
+          break;
+        }
+      }
+    }
+  }
+
+  // If the file is empty, exit after tutorial
+  if lines.is_empty() {
+    if std::io::stdout().is_terminal() {
+      execute!(stdout, Show, terminal::LeaveAlternateScreen)?;
+      terminal::disable_raw_mode()?;
+    }
+    return Ok(());
+  }
+
   let total_lines = lines.len();
   let mut offset = match load_progress(document_hash) {
     Ok(progress) => {
