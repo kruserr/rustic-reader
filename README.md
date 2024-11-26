@@ -56,6 +56,9 @@ Visit the [Documentation](https://github.com/kruserr/hygg/blob/main/docs/pages/g
 - [ ] Server to sync progress and books
 - [ ] Text highlighting with server sync
 - [ ] Start screen to show overview of books and progress
+- [ ] Full test suite
+- [ ] CI / CD pipelines
+- [ ] Minimal build feature flag, for only basic converters, no server integration and no ai
 - [ ] Image to ascii art converter
 - [ ] Natural sounding ai voice model for text to speech narration
 - [ ] Run all inference directly in rust
