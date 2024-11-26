@@ -9,10 +9,11 @@ use std::path::PathBuf;
 use std::fs;
 
 use crossterm::{
-  cursor::{Hide, MoveTo, Show},
-  event::{self, Event as CEvent, KeyCode, KeyEvent},
-  execute,
-  terminal::{self, Clear, ClearType},
+    cursor::{Hide, MoveTo, Show},
+    event::{self, Event as CEvent, KeyCode, KeyEvent},
+    execute,
+    terminal::{self, Clear, ClearType},
+    style::{SetAttribute, Attribute, SetForegroundColor, SetBackgroundColor, Color, ResetColor},
 };
 
 #[allow(dead_code)]
@@ -127,6 +128,7 @@ fn get_tutorial_text() -> Vec<String> {
     "  k or ↑    : Move up one line".to_string(),
     "  PageDown  : Move down one page".to_string(),
     "  PageUp    : Move up one page".to_string(),
+    "  z         : Toggle line highlighter".to_string(),
     "  q         : Quit".to_string(),
     "".to_string(),
     "Press any key to continue...".to_string(),
@@ -136,6 +138,7 @@ fn get_tutorial_text() -> Vec<String> {
 #[derive(Default)]
 struct AppConfig {
     enable_tutorial: Option<bool>,
+    enable_line_highlighter: Option<bool>,
 }
 
 fn get_config_env_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
@@ -148,8 +151,8 @@ fn get_config_env_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
 
 fn ensure_config_file() -> Result<(), Box<dyn std::error::Error>> {
     let config_path = get_config_env_path()?;
-    if !config_path.exists() {
-        fs::write(config_path, "ENABLE_TUTORIAL=true\n")?;
+    if (!config_path.exists()) {
+        fs::write(config_path, "ENABLE_TUTORIAL=true\nENABLE_LINE_HIGHLIGHTER=true\n")?;
     }
     Ok(())
 }
@@ -162,6 +165,9 @@ fn load_config() -> AppConfig {
             dotenvy::from_path(config_path).ok();
             if let Ok(val) = std::env::var("ENABLE_TUTORIAL") {
                 config.enable_tutorial = Some(val.to_lowercase() == "true");
+            }
+            if let Ok(val) = std::env::var("ENABLE_LINE_HIGHLIGHTER") {
+                config.enable_line_highlighter = Some(val.to_lowercase() == "true");
             }
         }
     }
@@ -238,6 +244,8 @@ pub fn run_cli_text_reader(
     terminal::enable_raw_mode()?;
   }
 
+  let mut show_highlighter = config.enable_line_highlighter.unwrap_or(true);
+
   loop {
     if std::io::stdout().is_terminal() {
       execute!(stdout, MoveTo(0, 0), Clear(ClearType::All))?;
@@ -245,22 +253,33 @@ pub fn run_cli_text_reader(
 
     let show_line_number = false;
     let center = true;
-
+    let term_width = terminal::size()?.0 as u16;
     let center_offset = if width > col { (width / 2) - col / 2 } else { 0 };
-
-    let center_offset_string =
-      if center { " ".repeat(center_offset) } else { "".to_string() };
+    let center_offset_string = if center { " ".repeat(center_offset) } else { "".to_string() };
 
     for (i, line_orig) in lines.iter().skip(offset).take(height).enumerate() {
       let mut line = line_orig.clone();
-
-      execute!(stdout, MoveTo(0, i as u16))?;
-
       if show_line_number {
         line = format!("{i} {line}");
       }
 
-      println!("{center_offset_string}{line}");
+      execute!(stdout, MoveTo(0, i as u16))?;
+
+      // Draw highlight if enabled
+      if show_highlighter && i == height / 2 {
+        execute!(
+            stdout,
+            SetBackgroundColor(Color::Rgb { r: 40, g: 40, b: 40 })
+        )?;
+        print!("{}", " ".repeat(term_width as usize));
+        execute!(stdout, MoveTo(0, i as u16))?;
+      }
+
+      println!("{}{}", center_offset_string, line);
+      
+      if show_highlighter && i == height / 2 {
+        execute!(stdout, SetBackgroundColor(Color::Reset))?;
+      }
     }
 
     stdout.flush()?;
@@ -290,6 +309,9 @@ pub fn run_cli_text_reader(
               offset = 0;
             }
           }
+          KeyCode::Char('z') => {
+            show_highlighter = !show_highlighter;
+          },
           KeyCode::Char('q') => break,
           _ => {}
         },
