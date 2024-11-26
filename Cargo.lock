@@ -149,6 +149,7 @@ dependencies = [
  "cli-justify",
  "crossterm",
  "dirs",
+ "dotenvy",
  "getopts",
  "serde",
  "serde_json",
@@ -290,6 +291,12 @@ dependencies = [
  "quote",
  "syn",
 ]
+
+[[package]]
+name = "dotenvy"
+version = "0.15.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
 
 [[package]]
 name = "either"

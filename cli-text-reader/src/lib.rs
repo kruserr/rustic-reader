@@ -6,6 +6,7 @@ use std::fs::OpenOptions;
 use std::hash::{Hash, Hasher};
 use std::io::{self, IsTerminal, Write};
 use std::path::PathBuf;
+use std::fs;
 
 use crossterm::{
   cursor::{Hide, MoveTo, Show},
@@ -132,15 +133,55 @@ fn get_tutorial_text() -> Vec<String> {
   ]
 }
 
+#[derive(Default)]
+struct AppConfig {
+    enable_tutorial: Option<bool>,
+}
+
+fn get_config_env_path() -> Result<PathBuf, Box<dyn std::error::Error>> {
+    let mut config_path = config_dir().ok_or("Unable to find config directory")?;
+    config_path.push("hygg");
+    std::fs::create_dir_all(&config_path)?;
+    config_path.push(".env");
+    Ok(config_path)
+}
+
+fn ensure_config_file() -> Result<(), Box<dyn std::error::Error>> {
+    let config_path = get_config_env_path()?;
+    if !config_path.exists() {
+        fs::write(config_path, "ENABLE_TUTORIAL=true\n")?;
+    }
+    Ok(())
+}
+
+fn load_config() -> AppConfig {
+    let mut config = AppConfig::default();
+    
+    if let Ok(config_path) = get_config_env_path() {
+        if let Ok(_) = ensure_config_file() {
+            dotenvy::from_path(config_path).ok();
+            if let Ok(val) = std::env::var("ENABLE_TUTORIAL") {
+                config.enable_tutorial = Some(val.to_lowercase() == "true");
+            }
+        }
+    }
+    
+    config
+}
+
 pub fn run_cli_text_reader(
   lines: Vec<String>,
   col: usize,
 ) -> Result<(), Box<dyn std::error::Error>> {
   let mut stdout = io::stdout();
   
-  // Show tutorial for empty files or first-time views
+  // Load config and check if tutorial should be shown
+  let config = load_config();
   let document_hash = generate_hash(&lines);
-  let show_tutorial = lines.is_empty() || load_progress(document_hash).is_err();
+  let show_tutorial = match config.enable_tutorial {
+      Some(false) => false,
+      _ => lines.is_empty() || load_progress(document_hash).is_err(),
+  };
   
   if show_tutorial {
     let tutorial_lines = get_tutorial_text();
