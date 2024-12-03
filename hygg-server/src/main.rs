@@ -40,7 +40,7 @@ async fn main() {
 
     let upload_route = warp::path("upload")
         .and(warp::post())
-        .and(warp::multipart::form().max_length(50_000_000))
+        .and(warp::multipart::form().max_length(1024 * 1024 * 50))
         .and_then(move |x| upload(x, &uploads_dir))
     ;
 
