@@ -31,7 +31,7 @@ async fn main() {
     let download_route = warp::path("download")
       .and(warp::fs::dir(uploads_dir));
 
-    let promote_route = warp::post()
+    let progress_route = warp::post()
         .and(warp::path("progress"))
         .and(warp::body::content_length_limit(1024 * 16))
         .and(warp::body::json())
@@ -43,7 +43,7 @@ async fn main() {
 
     let router = upload_route
       .or(download_route)
-      .or(promote_route);
+      .or(progress_route);
       // .recover(handle_rejection);
 
     warp::serve(router.with(warp::trace::request())).run(([0, 0, 0, 0], 3030)).await;
