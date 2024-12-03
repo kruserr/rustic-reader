@@ -19,3 +19,7 @@ uuid = { version = "0.8", features = ["v4"] }
 futures = { version = "0.3", default-features = false }
 bytes = "1.0"
 tracing-subscriber = "0.3"
+serde = "1.0"
+serde_derive = "1.0"
+
+cli-text-reader-online = { version = "0.1", path = "../cli-text-reader-online" }

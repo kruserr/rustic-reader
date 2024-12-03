@@ -1,6 +1,6 @@
 mod config;
 mod editor;
-mod progress;
+pub mod progress;
 mod tutorial;
 
 use editor::Editor;

@@ -696,7 +696,10 @@ name = "hygg-server"
 version = "0.1.11"
 dependencies = [
  "bytes",
+ "cli-text-reader-online",
  "futures",
+ "serde",
+ "serde_derive",
  "tokio",
  "tracing-subscriber",
  "uuid 0.8.2",

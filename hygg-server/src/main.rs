@@ -1,9 +1,11 @@
 use bytes::BufMut;
+use cli_text_reader_online::progress::Progress;
 use futures::{StreamExt, TryStreamExt};
 use tracing_subscriber::fmt::format::FmtSpan;
 use std::convert::Infallible;
 use uuid::Uuid;
 use warp::{http::StatusCode, multipart::FormData, Filter, Rejection, Reply};
+use serde_derive::{Deserialize, Serialize};
 
 pub fn mkdir(
   input: &str,
@@ -26,9 +28,24 @@ async fn main() {
         .and(warp::multipart::form().max_length(50_000_000))
         .and_then(move |x| upload(x, &uploads_dir));
 
-    let download_route = warp::fs::dir(uploads_dir);
+    let download_route = warp::path("download")
+      .and(warp::fs::dir(uploads_dir));
 
-    let router = upload_route.or(download_route).recover(handle_rejection);
+    let promote_route = warp::post()
+        .and(warp::path("progress"))
+        .and(warp::body::content_length_limit(1024 * 16))
+        .and(warp::body::json())
+        .map(|progress: Progress| {
+            println!("{:?}", progress);
+
+            warp::reply::json(&progress)
+        });
+
+    let router = upload_route
+      .or(download_route)
+      .or(promote_route);
+      // .recover(handle_rejection);
+
     warp::serve(router.with(warp::trace::request())).run(([0, 0, 0, 0], 3030)).await;
 }
 
