@@ -1,5 +1,5 @@
 use bytes::BufMut;
-use cli_text_reader_online::progress::Progress;
+// use cli_text_reader_online::progress::Progress;
 use futures::{StreamExt, TryStreamExt};
 use tracing_subscriber::fmt::format::FmtSpan;
 use std::convert::Infallible;
@@ -16,6 +16,21 @@ pub fn mkdir(
   Ok("".into())
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Progress {
+  pub session_id: String,
+  pub document_hash: u64,
+  pub offset: usize,
+  pub total_lines: usize,
+  pub percentage: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Opened {
+  pub session_id: String,
+  pub document_hash: u64,
+}
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt().with_span_events(FmtSpan::CLOSE).init();
@@ -26,10 +41,12 @@ async fn main() {
     let upload_route = warp::path("upload")
         .and(warp::post())
         .and(warp::multipart::form().max_length(50_000_000))
-        .and_then(move |x| upload(x, &uploads_dir));
+        .and_then(move |x| upload(x, &uploads_dir))
+    ;
 
     let download_route = warp::path("download")
-      .and(warp::fs::dir(uploads_dir));
+      .and(warp::fs::dir(uploads_dir))
+    ;
 
     let progress_route = warp::post()
         .and(warp::path("progress"))
@@ -39,12 +56,26 @@ async fn main() {
             println!("{:?}", progress);
 
             warp::reply::json(&progress)
-        });
+        })
+    ;
+
+    let opened_route = warp::post()
+        .and(warp::path("opened"))
+        .and(warp::body::content_length_limit(1024 * 16))
+        .and(warp::body::json())
+        .map(|opened: Opened| {
+            println!("{:?}", opened);
+
+            warp::reply::json(&opened)
+        })
+    ;
 
     let router = upload_route
       .or(download_route)
-      .or(progress_route);
-      // .recover(handle_rejection);
+      .or(opened_route)
+      .or(progress_route)
+      // .recover(handle_rejection)
+    ;
 
     warp::serve(router.with(warp::trace::request())).run(([0, 0, 0, 0], 3030)).await;
 }
