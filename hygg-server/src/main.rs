@@ -4,8 +4,12 @@ use futures::{StreamExt, TryStreamExt};
 use tracing_subscriber::fmt::format::FmtSpan;
 use std::convert::Infallible;
 use uuid::Uuid;
+
 use warp::{http::StatusCode, multipart::FormData, Filter, Rejection, Reply};
 use serde_derive::{Deserialize, Serialize};
+use polodb_core::{CollectionT, Database};
+use polodb_core::bson::{Document, doc};
+use chrono::{DateTime, Utc};
 
 pub fn mkdir(
   input: &str,
@@ -17,18 +21,35 @@ pub fn mkdir(
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Progress {
-  pub session_id: String,
-  pub document_hash: u64,
-  pub offset: usize,
-  pub total_lines: usize,
-  pub percentage: f64,
+pub struct OpenedDTO {
+  session_id: String,
+  document_hash: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Opened {
+  timestamp: DateTime<Utc>,
+
+  session_id: String,
+  document_hash: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Opened {
-  pub session_id: String,
-  pub document_hash: u64,
+pub struct ProgressDTO {
+  session_id: String,
+  document_hash: String,
+  offset: String,
+  total_lines: String,
+  percentage: String,
+}
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Progress {
+  timestamp: DateTime<Utc>,
+
+  session_id: String,
+  document_hash: String,
+  offset: String,
+  total_lines: String,
+  percentage: String,
 }
 
 #[tokio::main]
@@ -38,42 +59,90 @@ async fn main() {
     let uploads_dir = "hygg-server-uploads";
     mkdir(uploads_dir);
 
-    let upload_route = warp::path("upload")
+    let db_path = "hygg-server-db";
+    let db_collection_opened = "opened";
+    let db_collection_progress = "progress";
+    let db = std::sync::Arc::new(Database::open_file(db_path).unwrap());
+
+    let route_post_upload = warp::path("upload")
         .and(warp::post())
         .and(warp::multipart::form().max_length(1024 * 1024 * 50))
         .and_then(move |x| upload(x, &uploads_dir))
     ;
 
-    let download_route = warp::path("download")
+    let route_get_download = warp::path("download")
+      .and(warp::get())
       .and(warp::fs::dir(uploads_dir))
     ;
 
-    let progress_route = warp::post()
-        .and(warp::path("progress"))
+    let route_post_opened_db = db.clone();
+    let route_post_opened = warp::path("opened")
+        .and(warp::post())
         .and(warp::body::content_length_limit(1024 * 16))
         .and(warp::body::json())
-        .map(|progress: Progress| {
+        .map(move |opened: OpenedDTO| {
+            println!("{:?}", opened);
+
+            // let txn = db.start_transaction().unwrap();
+            // let collection = txn.collection::<Document>(db_collection_opened);
+
+            let collection = route_post_opened_db.collection::<Opened>(db_collection_opened);
+
+            collection.insert_one(Opened {
+              timestamp: chrono::Utc::now(), 
+
+              session_id: opened.session_id,
+              document_hash: opened.document_hash,
+            }).unwrap();
+
+            warp::reply::json(&"3".to_owned())
+        })
+    ;
+
+    let route_get_opened_db = db.clone();
+    let route_get_opened = warp::path("opened")
+        .and(warp::get())
+        .and(warp::path::param::<String>())
+        .map(move |document_hash: String| {
+            // let txn = db.start_transaction().unwrap();
+            // let collection = txn.collection::<Document>(db_collection_opened);
+
+            let collection = route_get_opened_db.collection::<Opened>(db_collection_opened);
+
+            let res = collection
+              .find(doc! {
+                  "document_hash": document_hash,
+              })
+              .sort(doc! {
+                  "timestamp": -1,
+              })
+              .limit(1)
+              .run().unwrap();
+
+            for item in res {
+                println!("{:?}", item);
+            }
+
+            warp::reply::json(&"2".to_owned())
+        })
+    ;
+
+    let route_post_progress = warp::path("progress")
+        .and(warp::post())
+        .and(warp::body::content_length_limit(1024 * 16))
+        .and(warp::body::json())
+        .map(|progress: ProgressDTO| {
             println!("{:?}", progress);
 
             warp::reply::json(&progress)
         })
     ;
 
-    let opened_route = warp::post()
-        .and(warp::path("opened"))
-        .and(warp::body::content_length_limit(1024 * 16))
-        .and(warp::body::json())
-        .map(|opened: Opened| {
-            println!("{:?}", opened);
-
-            warp::reply::json(&opened)
-        })
-    ;
-
-    let router = upload_route
-      .or(download_route)
-      .or(opened_route)
-      .or(progress_route)
+    let router = route_post_upload
+      .or(route_get_download)
+      .or(route_post_opened)
+      .or(route_get_opened)
+      .or(route_post_progress)
       // .recover(handle_rejection)
     ;
 
