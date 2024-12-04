@@ -2,13 +2,16 @@ use bytes::BufMut;
 use cli_text_reader_online::progress::generate_hash;
 // use cli_text_reader_online::progress::Progress;
 use futures::{StreamExt, TryFutureExt, TryStreamExt};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use tracing_subscriber::fmt::format::{self, FmtSpan};
 use std::convert::Infallible;
+use std::sync::Arc;
 use uuid::Uuid;
 
 use warp::{http::StatusCode, multipart::FormData, Filter, Rejection, Reply};
-use serde_derive::{Deserialize, Serialize};
-use polodb_core::{CollectionT, Database};
+use serde_derive::Deserialize;
+use polodb_core::{ClientCursor, CollectionT, Database};
 use polodb_core::bson::{Document, doc};
 use chrono::{DateTime, Utc};
 
@@ -68,7 +71,7 @@ async fn main() {
     let route_post_upload = warp::path("upload")
         .and(warp::post())
         .and(warp::multipart::form().max_length(1024 * 1024 * 50))
-        .and_then(move |x| upload(x, &uploads_dir))
+        .and_then(move |x| handler_upload(x, &uploads_dir))
     ;
 
     let route_get_download = warp::path("download")
@@ -84,10 +87,8 @@ async fn main() {
         .map(move |opened: OpenedDTO| {
             println!("{:?}", opened);
 
-            // let txn = db.start_transaction().unwrap();
-            // let collection = txn.collection::<Document>(db_collection_opened);
-
-            let collection = route_post_opened_db.collection::<Opened>(db_collection_opened);
+            let txn = route_post_opened_db.start_transaction().unwrap();
+            let collection = txn.collection::<Opened>(db_collection_opened);
 
             collection.insert_one(Opened {
               timestamp: chrono::Utc::now(), 
@@ -95,6 +96,8 @@ async fn main() {
               session_id: opened.session_id,
               document_hash: opened.document_hash,
             }).unwrap();
+
+            txn.commit().unwrap();
 
             warp::reply::json(&"3".to_owned())
         })
@@ -105,20 +108,7 @@ async fn main() {
         .and(warp::get())
         .and(warp::path::param::<String>())
         .map(move |document_hash: String| {
-            // let txn = db.start_transaction().unwrap();
-            // let collection = txn.collection::<Document>(db_collection_opened);
-
-            let collection = route_get_opened_db.collection::<Opened>(db_collection_opened);
-
-            let res = collection
-              .find(doc! {
-                  "document_hash": document_hash,
-              })
-              .sort(doc! {
-                  "timestamp": -1,
-              })
-              .limit(1)
-              .run().unwrap();
+            let res = get_latest_by_document_hash::<Opened>(route_get_opened_db.clone(), db_collection_opened, &document_hash);
 
             for item in res {
                 println!("{:?}", item);
@@ -144,13 +134,29 @@ async fn main() {
       .or(route_post_opened)
       .or(route_get_opened)
       .or(route_post_progress)
-      // .recover(handle_rejection)
     ;
 
     warp::serve(router.with(warp::trace::request())).run(([0, 0, 0, 0], 3030)).await;
 }
 
-async fn upload(form: FormData, uploads_dir: &str) -> Result<impl Reply, Rejection> {
+fn get_latest_by_document_hash<T: Serialize + Send + Sync + DeserializeOwned>(db: Arc<Database>, db_collection_name: &str, document_hash: &str) -> ClientCursor<T> {
+    let txn = db.start_transaction().unwrap();
+    let collection = txn.collection::<T>(db_collection_name);
+
+    let res = collection
+      .find(doc! {
+          "document_hash": document_hash,
+      })
+      .sort(doc! {
+          "timestamp": -1,
+      })
+      .limit(1)
+      .run().unwrap();
+
+    return res;
+}
+
+async fn handler_upload(form: FormData, uploads_dir: &str) -> Result<impl Reply, Rejection> {
     let mut parts = form.into_stream();
 
     while let Some(Ok(p)) = parts.next().await {
@@ -205,20 +211,4 @@ async fn upload(form: FormData, uploads_dir: &str) -> Result<impl Reply, Rejecti
     }
 
     Ok("success")
-}
-
-async fn handle_rejection(err: Rejection) -> std::result::Result<impl Reply, Infallible> {
-    let (code, message) = if err.is_not_found() {
-        (StatusCode::NOT_FOUND, "Not Found".to_string())
-    } else if err.find::<warp::reject::PayloadTooLarge>().is_some() {
-        (StatusCode::BAD_REQUEST, "Payload too large".to_string())
-    } else {
-        eprintln!("unhandled error: {:?}", err);
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Internal Server Error".to_string(),
-        )
-    };
-
-    Ok(warp::reply::with_status(message, code))
 }
