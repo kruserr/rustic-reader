@@ -12,7 +12,7 @@ use uuid::Uuid;
 use warp::{http::StatusCode, multipart::FormData, Filter, Rejection, Reply};
 use serde_derive::Deserialize;
 use polodb_core::{ClientCursor, CollectionT, Database};
-use polodb_core::bson::{Document, doc};
+use polodb_core::bson::{doc, document, Document};
 use chrono::{DateTime, Utc};
 
 pub fn mkdir(
@@ -22,6 +22,15 @@ pub fn mkdir(
   std::fs::create_dir_all(path)
     .map_err(|e| Box::new(e) as Box<dyn std::error::Error + Send>)?;
   Ok("".into())
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct HyggDocument {
+  timestamp: DateTime<Utc>,
+
+  name: String,
+  document_hash: String,
+  path: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -64,14 +73,40 @@ async fn main() {
     mkdir(uploads_dir);
 
     let db_path = "hygg-server-db";
+    let db_collection_hygg_document = "hygg_document";
     let db_collection_opened = "opened";
     let db_collection_progress = "progress";
     let db = std::sync::Arc::new(Database::open_file(db_path).unwrap());
 
+    let route_post_upload_db = db.clone();
     let route_post_upload = warp::path("upload")
         .and(warp::post())
         .and(warp::multipart::form().max_length(1024 * 1024 * 50))
-        .and_then(move |x| handler_upload(x, &uploads_dir))
+        .and(warp::path::param::<String>())
+        .and_then(move |x, name| handler_upload(x, &uploads_dir, name, route_post_upload_db.clone(), &db_collection_hygg_document))
+    ;
+
+    let route_get_list_db = db.clone();
+    let route_get_list = warp::path("list")
+        .and(warp::get())
+        .map(move || {
+            let txn = route_get_list_db.start_transaction().unwrap();
+            let collection = txn.collection::<HyggDocument>(db_collection_hygg_document);
+
+            let documents = collection
+              .find(doc! {
+              })
+              .run().unwrap();
+
+            let mut res = String::new();
+            for item in documents {
+              if let Ok(x) = item {
+                res += &format!("\n{}, {}, {}, {}", x.name, x.document_hash, x.timestamp, x.path);
+              }
+            }
+
+            return warp::reply::json(&res);
+        })
     ;
 
     let route_get_download = warp::path("download")
@@ -118,7 +153,6 @@ async fn main() {
         })
     ;
 
-
     let route_post_progress_db = db.clone();
     let route_post_progress = warp::path("progress")
         .and(warp::post())
@@ -163,6 +197,7 @@ async fn main() {
     ;
 
     let router = route_post_upload
+      .or(route_get_list)
       .or(route_get_download)
       .or(route_post_opened)
       .or(route_get_opened)
@@ -189,7 +224,7 @@ fn get_latest_by_document_hash<T: Serialize + Send + Sync + DeserializeOwned>(db
     return res;
 }
 
-async fn handler_upload(form: FormData, uploads_dir: &str) -> Result<impl Reply, Rejection> {
+async fn handler_upload(form: FormData, uploads_dir: &str, name: String, db: Arc<Database>, db_collection_name: &str) -> Result<impl Reply, Rejection> {
     let mut parts = form.into_stream();
 
     while let Some(Ok(p)) = parts.next().await {
@@ -238,6 +273,19 @@ async fn handler_upload(form: FormData, uploads_dir: &str) -> Result<impl Reply,
               eprint!("error writing file: {}", e);
               warp::reject::reject()
           })?;
+
+          let txn = db.start_transaction().unwrap();
+          let collection = txn.collection::<HyggDocument>(db_collection_name);
+
+          collection.insert_one(HyggDocument {
+            timestamp: chrono::Utc::now(), 
+
+            name: name.clone(),
+            document_hash: document_hash.to_string(),
+            path: file_path.into(),
+          }).unwrap();
+
+          txn.commit().unwrap();
 
           println!("created file: {}", file_path);
         }
