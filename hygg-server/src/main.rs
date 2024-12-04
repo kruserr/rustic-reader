@@ -143,21 +143,6 @@ async fn main() {
         })
     ;
 
-    let route_get_opened_db = db.clone();
-    let route_get_opened = warp::path("opened")
-        .and(warp::get())
-        .and(warp::path::param::<String>())
-        .map(move |document_hash: String| {
-            let session = get_latest_by_document_hash::<Opened>(route_get_opened_db.clone(), db_collection_opened, &document_hash);
-
-            for item in session {
-                println!("{:?}", item);
-            }
-
-            return warp::reply::json(&"2".to_owned());
-        })
-    ;
-
     let route_post_progress_db = db.clone();
     let route_post_progress = warp::path("progress")
         .and(warp::post())
@@ -201,12 +186,41 @@ async fn main() {
         })
     ;
 
+    let route_get_progress_db = db.clone();
+    let route_get_progress = warp::path("progress")
+        .and(warp::get())
+        .and(warp::path::param::<String>())
+        .map(move |document_hash: String| {
+            let progress = get_latest_by_document_hash::<Progress>(
+              route_get_progress_db.clone(),
+              db_collection_progress,
+              &document_hash,
+            );
+
+            let mut res = vec![];
+            for item in progress {
+              if let Ok(x) = item {
+                res.push(Progress {
+                  timestamp: x.timestamp,
+                  session_id: x.session_id,
+                  document_hash: x.document_hash,
+                  offset: x.offset,
+                  total_lines: x.total_lines,
+                  percentage: x.percentage,
+                });
+              }
+            }
+
+            return warp::reply::json(&res);
+        })
+    ;
+
     let router = route_post_upload
       .or(route_get_list)
       .or(route_get_download)
       .or(route_post_opened)
-      .or(route_get_opened)
       .or(route_post_progress)
+      .or(route_get_progress)
     ;
 
     warp::serve(router.with(warp::trace::request())).run(([0, 0, 0, 0], 3030)).await;
