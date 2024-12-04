@@ -1,6 +1,6 @@
 use cli_justify;
 use cli_pdf_to_text;
-use cli_text_reader;
+use cli_text_reader::{self, progress::generate_hash};
 use redirect_stderr;
 
 use std::{env, fmt::format};
@@ -139,6 +139,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   // TODO refactor the above into the assignment of `file` and `temp_file` vars
   // such that ocr also works for files from the server
   let file = std::env::args().last().unwrap();
+  let file_bytes = std::fs::read(&file).unwrap();
+  let document_hash = generate_hash(&file_bytes);
+
   let temp_file = format!("{file}-{}", uuid::Uuid::new_v4());
 
   let content = if (ocr && which("ocrmypdf").is_some()) {
@@ -164,7 +167,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let lines = cli_justify::justify(&content, col);
 
-  cli_text_reader::run_cli_text_reader(lines, col)?;
+  cli_text_reader::run_cli_text_reader(lines, col, document_hash)?;
 
   if std::path::Path::new(&temp_file).exists() {
     std::fs::remove_file(&temp_file)?;

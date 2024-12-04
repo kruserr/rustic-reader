@@ -1,5 +1,6 @@
 use cli_justify;
 use cli_text_reader;
+use cli_text_reader::progress::generate_hash;
 
 use std::env;
 use std::io::{self, BufRead};
@@ -50,7 +51,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
   let lines = cli_justify::justify(&lines_vec.join("\n"), col);
 
-  cli_text_reader::run_cli_text_reader(lines, col)?;
+
+  let document_hash = generate_hash(&lines);
+
+  cli_text_reader::run_cli_text_reader(lines, col, document_hash)?;
 
   return Ok(());
 }

@@ -56,8 +56,7 @@ pub struct Editor {
 }
 
 impl Editor {
-  pub fn new(lines: Vec<String>, col: usize) -> Self {
-    let document_hash = generate_hash(&lines);
+  pub fn new(lines: Vec<String>, col: usize, document_hash: u64) -> Self {
     let total_lines = lines.len();
     let (width, height) = terminal::size()
       .map(|(w, h)| (w as usize, h as usize))
