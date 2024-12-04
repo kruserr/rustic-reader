@@ -1,7 +1,8 @@
 use bytes::BufMut;
+use cli_text_reader_online::progress::generate_hash;
 // use cli_text_reader_online::progress::Progress;
-use futures::{StreamExt, TryStreamExt};
-use tracing_subscriber::fmt::format::FmtSpan;
+use futures::{StreamExt, TryFutureExt, TryStreamExt};
+use tracing_subscriber::fmt::format::{self, FmtSpan};
 use std::convert::Infallible;
 use uuid::Uuid;
 
@@ -151,53 +152,55 @@ async fn main() {
 
 async fn upload(form: FormData, uploads_dir: &str) -> Result<impl Reply, Rejection> {
     let mut parts = form.into_stream();
+
     while let Some(Ok(p)) = parts.next().await {
-        if p.name() == "file" {
-            let content_type = p.content_type();
-            let file_ending;
+        if p.name() != "file" {
+          continue;
+        }
 
-            println!("{content_type:?}");
+        let content_type = p.content_type();
 
-            match content_type {
-                Some(file_type) => match file_type {
-                    "application/pdf" => {
-                        file_ending = "pdf";
-                    }
-                    "application/epub+zip" => {
-                        file_ending = "epub";
-                    }
-                    "text/html" => {
-                        file_ending = "html";
-                    }
-                    v => {
-                        eprintln!("invalid file type found: {}", v);
-                        return Err(warp::reject::reject());
-                    }
-                },
-                None => {
-                    eprintln!("file type could not be determined");
+        match content_type {
+            Some(file_type) => match file_type {
+                "application/pdf" => (),
+                "application/epub+zip" => (),
+                "text/html" => (),
+                v => {
+                    eprintln!("invalid file type found: {}", v);
                     return Err(warp::reject::reject());
                 }
+            },
+            None => {
+                eprintln!("file type could not be determined");
+                return Err(warp::reject::reject());
             }
+        }
 
-            let value = p
-                .stream()
-                .try_fold(Vec::new(), |mut vec, data| {
-                    vec.put(data);
-                    async move { Ok(vec) }
-                })
-                .await
-                .map_err(|e| {
-                    eprintln!("reading file error: {}", e);
-                    warp::reject::reject()
-                })?;
-
-            let file_name = format!("./{uploads_dir}/{}.{}", Uuid::new_v4(), file_ending);
-            tokio::fs::write(&file_name, value).await.map_err(|e| {
-                eprint!("error writing file: {}", e);
+        let value = p
+            .stream()
+            .try_fold(Vec::new(), |mut vec, data| {
+                vec.put(data);
+                async move { Ok(vec) }
+            })
+            .await
+            .map_err(|e| {
+                eprintln!("reading file error: {}", e);
                 warp::reject::reject()
             })?;
-            println!("created file: {}", file_name);
+        
+        let document_hash = generate_hash(&value);
+
+        let file_path = &format!("./{uploads_dir}/{document_hash}");
+
+        let file_path_exists = tokio::fs::try_exists(file_path).await.unwrap();
+
+        if (!file_path_exists) {
+          tokio::fs::write(file_path, value).await.map_err(|e| {
+              eprint!("error writing file: {}", e);
+              warp::reject::reject()
+          })?;
+
+          println!("created file: {}", file_path);
         }
     }
 
