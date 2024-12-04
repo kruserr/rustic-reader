@@ -98,10 +98,15 @@ async fn main() {
               })
               .run().unwrap();
 
-            let mut res = String::new();
+            let mut res = vec![];
             for item in documents {
               if let Ok(x) = item {
-                res += &format!("\n{}, {}, {}, {}", x.name, x.document_hash, x.timestamp, x.path);
+                res.push(HyggDocument {
+                  timestamp: x.timestamp,
+                  name: x.name,
+                  document_hash: x.document_hash,
+                  path: x.path,
+                });
               }
             }
 
