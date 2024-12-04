@@ -99,7 +99,7 @@ async fn main() {
 
             txn.commit().unwrap();
 
-            warp::reply::json(&"3".to_owned())
+            return warp::reply::json(&"200".to_owned());
         })
     ;
 
@@ -108,24 +108,57 @@ async fn main() {
         .and(warp::get())
         .and(warp::path::param::<String>())
         .map(move |document_hash: String| {
-            let res = get_latest_by_document_hash::<Opened>(route_get_opened_db.clone(), db_collection_opened, &document_hash);
+            let session = get_latest_by_document_hash::<Opened>(route_get_opened_db.clone(), db_collection_opened, &document_hash);
 
-            for item in res {
+            for item in session {
                 println!("{:?}", item);
             }
 
-            warp::reply::json(&"2".to_owned())
+            return warp::reply::json(&"2".to_owned());
         })
     ;
 
+
+    let route_post_progress_db = db.clone();
     let route_post_progress = warp::path("progress")
         .and(warp::post())
         .and(warp::body::content_length_limit(1024 * 16))
         .and(warp::body::json())
-        .map(|progress: ProgressDTO| {
+        .map(move |progress: ProgressDTO| {
             println!("{:?}", progress);
 
-            warp::reply::json(&progress)
+            let session = get_latest_by_document_hash::<Opened>(
+              route_post_progress_db.clone(),
+              db_collection_opened,
+              &progress.document_hash
+            );
+
+            for item in session {
+                if let Ok(x) = item {
+                  if (x.session_id != progress.session_id) {
+                    return warp::reply::json(&"400".to_owned());
+                  }
+
+                  let txn = route_post_progress_db.start_transaction().unwrap();
+                  let collection = txn.collection::<Progress>(db_collection_progress);
+
+                  collection.insert_one(Progress {
+                    timestamp:chrono::Utc::now(),
+
+                    session_id: progress.session_id,
+                    document_hash: progress.document_hash,
+                    offset: progress.offset,
+                    total_lines: progress.total_lines,
+                    percentage: progress.percentage,
+                  }).unwrap();
+
+                  txn.commit().unwrap();
+
+                  return warp::reply::json(&"200".to_owned());
+                }
+            }
+
+            return warp::reply::json(&"500".to_owned());
         })
     ;
 
