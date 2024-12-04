@@ -7,7 +7,7 @@ use std::hash::{Hash, Hasher};
 use std::io::{self, BufRead, Write};
 use std::path::PathBuf;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Progress {
   pub document_hash: u64,
   pub offset: usize,

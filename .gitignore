@@ -3,3 +3,5 @@ target
 test-data/local
 progress.json
 TODO.md
+hygg-server-uploads/*
+hygg-server-db/*
